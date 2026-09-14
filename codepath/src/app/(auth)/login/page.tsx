@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,11 +16,41 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Eye, EyeOff, Github, Mail } from "lucide-react";
-import { loginWithCredentials } from "./actions";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [state, formAction, isPending] = useActionState(loginWithCredentials, undefined);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, setIsPending] = useState(false);
+  const router = useRouter();
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+    setIsPending(true);
+
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    if (!email || !password) {
+      setError("Email dan password harus diisi");
+      setIsPending(false);
+      return;
+    }
+
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
+    if (result?.error) {
+      setError("Email atau password salah");
+      setIsPending(false);
+    } else {
+      router.push("/dashboard");
+    }
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4">
@@ -72,14 +103,14 @@ export default function LoginPage() {
             </div>
 
             {/* Error Message */}
-            {state?.error && (
+            {error && (
               <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                {state.error}
+                {error}
               </div>
             )}
 
             {/* Email/Password Form */}
-            <form action={formAction} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
