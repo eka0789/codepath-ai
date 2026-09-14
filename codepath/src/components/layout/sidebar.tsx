@@ -6,11 +6,13 @@ import { cn } from "@/lib/utils";
 import {
   BarChart3,
   BookOpen,
+  Bot,
   Dna,
   GraduationCap,
   Home,
   LayoutDashboard,
   LogOut,
+  MessageCircle,
   Settings,
   Sparkles,
   Target,
@@ -26,6 +28,7 @@ const navItems = [
   { href: "/roadmap", label: "Learning Roadmap", icon: Zap },
   { href: "/projects", label: "Projects", icon: BookOpen },
   { href: "/skills", label: "Skills", icon: Target },
+  { href: "/mentor", label: "AI Mentor", icon: MessageCircle },
 ];
 
 const bottomItems = [
