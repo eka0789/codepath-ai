@@ -90,18 +90,21 @@ model VerificationToken {
 // ========================================
 
 model Profile {
-  id              String  @id @default(cuid())
-  userId          String  @unique
-  bio             String? @db.Text
-  location        String?
-  timezone        String?
-  website         String?
-  github          String?
-  linkedin        String?
-  yearsExperience Int?
-  currentRole     String?
-  company         String?
-  avatar          String?
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  bio                  String?  @db.Text
+  location             String?
+  timezone             String?
+  website              String?
+  github               String?
+  linkedin             String?
+  yearsExperience      Int?
+  currentRole          String?
+  company              String?
+  avatar               String?
+  experienceLevel      String? // beginner, intermediate, advanced, expert
+  preferredCategories  String[] // frontend, backend, fullstack, mobile, devops, data, ai
+  goals                String[] // first_job, switch_career, upgrade, freelance, build_startup
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

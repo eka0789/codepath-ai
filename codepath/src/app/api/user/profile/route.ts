@@ -39,15 +39,39 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json();
-    const { name, image, onboarded } = body;
+    const { name, image, onboarded, experienceLevel, interests, goals } = body;
 
-    const updated = await prisma.user.update({
+    // Update User fields
+    const userUpdate: Record<string, unknown> = {};
+    if (name) userUpdate.name = name;
+    if (image) userUpdate.image = image;
+    if (typeof onboarded === "boolean") userUpdate.onboarded = onboarded;
+
+    if (Object.keys(userUpdate).length > 0) {
+      await prisma.user.update({
+        where: { id: session.user.id },
+        data: userUpdate,
+      });
+    }
+
+    // Update or create Profile with onboarding data
+    const profileUpdate: Record<string, unknown> = {};
+    if (experienceLevel) profileUpdate.experienceLevel = experienceLevel;
+    if (Array.isArray(interests)) profileUpdate.preferredCategories = interests;
+    if (Array.isArray(goals)) profileUpdate.goals = goals;
+
+    if (Object.keys(profileUpdate).length > 0) {
+      await prisma.profile.upsert({
+        where: { userId: session.user.id },
+        create: { userId: session.user.id, ...profileUpdate },
+        update: profileUpdate,
+      });
+    }
+
+    // Return updated user with profile
+    const updated = await prisma.user.findUnique({
       where: { id: session.user.id },
-      data: {
-        ...(name && { name }),
-        ...(image && { image }),
-        ...(typeof onboarded === "boolean" && { onboarded }),
-      },
+      include: { profile: true },
     });
 
     return NextResponse.json({ success: true, data: updated });
