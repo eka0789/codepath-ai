@@ -1,59 +1,56 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { Card, CardContent } from "@/components/ui/card";
 import { StatCard, RoadmapPhase, EmptyState, LoadingSkeleton } from "@/components/domain";
 import { useApi } from "@/hooks/use-api";
-import {
-  Sparkles,
-  BookOpen,
-  CheckCircle2,
-  Code,
-  Target,
-  Rocket,
-} from "lucide-react";
+import { Sparkles, BookOpen, CheckCircle2, Code, Target } from "lucide-react";
 
-interface RoadmapModule {
+interface RoadmapNode {
   id: string;
   title: string;
   description?: string | null;
   type?: string | null;
+  difficulty?: string | null;
   estimatedHours?: number | null;
   order: number;
+  status?: string | null;
+  children?: RoadmapNode[];
 }
 
-interface RoadmapPhaseData {
+interface LearningRoadmap {
   id: string;
   title: string;
   description?: string | null;
-  order: number;
-  modules: RoadmapModule[];
-}
-
-interface Roadmap {
-  id: string;
-  title: string;
-  description?: string | null;
-  phases: RoadmapPhaseData[];
-}
-
-interface UserRoadmap {
-  id: string;
-  roadmapId: string;
-  enrolledAt: string;
-  roadmap: Roadmap;
+  estimatedHours?: number | null;
+  estimatedWeeks?: number | null;
+  status?: string | null;
+  progress?: number | null;
+  nodes: RoadmapNode[];
+  careerPath?: {
+    id: string;
+    name: string;
+    description?: string | null;
+  } | null;
 }
 
 export default function RoadmapPage() {
-  const { data: userRoadmaps, loading, error, refetch } = useApi<UserRoadmap[]>({ url: "/api/roadmap" });
+  const {
+    data: roadmap,
+    loading,
+    error,
+    refetch,
+  } = useApi<LearningRoadmap>({ url: "/api/roadmap" });
 
-  const activeRoadmaps = userRoadmaps || [];
-  const totalPhases = activeRoadmaps.reduce((acc, r) => acc + r.roadmap.phases.length, 0);
-  const totalModules = activeRoadmaps.reduce(
-    (acc, r) => acc + r.roadmap.phases.reduce((a, p) => a + p.modules.length, 0),
+  const totalNodes = roadmap?.nodes?.reduce(
+    (acc, n) => acc + 1 + (n.children?.length || 0),
     0
-  );
+  ) || 0;
+  const completedNodes = roadmap?.nodes?.reduce((acc, n) => {
+    let count = n.status === "COMPLETED" ? 1 : 0;
+    count += n.children?.filter((c) => c.status === "COMPLETED").length || 0;
+    return acc + count;
+  }, 0) || 0;
 
   return (
     <div className="p-6 lg:p-8">
@@ -81,7 +78,7 @@ export default function RoadmapPage() {
             </Button>
           </CardContent>
         </Card>
-      ) : activeRoadmaps.length === 0 ? (
+      ) : !roadmap ? (
         <EmptyState
           title="Belum ada roadmap"
           description="Mulai learning roadmap yang dipersonalisasi untuk goal kamu."
@@ -93,36 +90,47 @@ export default function RoadmapPage() {
           {/* Stats */}
           <div className="grid gap-4 md:grid-cols-3 mb-8">
             <StatCard
-              title="Roadmap Aktif"
-              value={activeRoadmaps.length}
-              icon={<BookOpen className="h-4 w-4" />}
-            />
-            <StatCard
-              title="Total Phase"
-              value={totalPhases}
+              title="Progress"
+              value={`${roadmap.progress ?? 0}%`}
               icon={<CheckCircle2 className="h-4 w-4" />}
             />
             <StatCard
-              title="Total Modul"
-              value={totalModules}
+              title="Total Nodes"
+              value={totalNodes}
+              icon={<BookOpen className="h-4 w-4" />}
+            />
+            <StatCard
+              title="Selesai"
+              value={`${completedNodes}/${totalNodes}`}
               icon={<Code className="h-4 w-4" />}
             />
           </div>
 
-          {/* Roadmaps */}
-          {activeRoadmaps.map((userRoadmap) => {
-            const roadmap = userRoadmap.roadmap;
-            return (
-              <div key={userRoadmap.id} className="mb-8">
-                <h2 className="text-lg font-semibold mb-4">{roadmap.title}</h2>
-                <div className="space-y-4">
-                  {roadmap.phases.map((phase) => (
-                    <RoadmapPhase key={phase.id} phase={phase} />
-                  ))}
-                </div>
+          {/* Roadmap header */}
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold">{roadmap.title}</h2>
+            {roadmap.description && (
+              <p className="text-sm text-muted-foreground mt-1">{roadmap.description}</p>
+            )}
+            {roadmap.careerPath && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Career Path: <span className="font-medium text-foreground">{roadmap.careerPath.name}</span>
+              </p>
+            )}
+            {(roadmap.estimatedHours || roadmap.estimatedWeeks) && (
+              <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
+                {roadmap.estimatedHours && <span>{roadmap.estimatedHours} jam total</span>}
+                {roadmap.estimatedWeeks && <span>{roadmap.estimatedWeeks} minggu</span>}
               </div>
-            );
-          })}
+            )}
+          </div>
+
+          {/* Phases (top-level nodes) */}
+          <div className="space-y-4">
+            {roadmap.nodes.map((node) => (
+              <RoadmapPhase key={node.id} phase={node} />
+            ))}
+          </div>
         </>
       )}
     </div>

@@ -13,7 +13,18 @@ export async function GET() {
       where: { userId: session.user.id },
       include: {
         nodes: {
+          where: { parentId: null },
           orderBy: { order: "asc" },
+          include: {
+            children: {
+              orderBy: { order: "asc" },
+              include: {
+                children: {
+                  orderBy: { order: "asc" },
+                },
+              },
+            },
+          },
         },
         careerPath: true,
       },
