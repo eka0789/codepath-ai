@@ -1,78 +1,94 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { UserCheck, Code, Sparkles, TrendingUp } from "lucide-react";
+import { UserPlus, Code2, Cpu, Rocket } from "lucide-react";
 
-const steps = [
+const workflowSteps = [
   {
     step: "01",
-    icon: UserCheck,
-    title: "Daftar & Setup Profile",
-    description:
-      "Buat akun dan setup profil developer kamu. Ceritakan pengalaman dan goal karir kamu.",
+    icon: UserPlus,
+    title: "Buat Profil Developer",
+    desc: "Daftar dalam 30 detik. Ceritakan background, bahasa pemrograman yang kamu ketahui, dan target karirmu.",
+    highlight: "Cepat & Gratis",
   },
   {
     step: "02",
-    icon: Code,
-    title: "Coding Assessment",
-    description:
-      "Selesaikan coding assessment yang menganalisis pattern, gaya coding, dan kemampuan kamu.",
+    icon: Code2,
+    title: "Coding DNA Assessment",
+    desc: "Selesaikan evaluasi interaktif yang menguji pola pemecahan masalah, penanganan edge-case, dan gaya arsitekturmu.",
+    highlight: "Berbasis Praktik",
   },
   {
     step: "03",
-    icon: Sparkles,
-    title: "Dapatkan Rekomendasi AI",
-    description:
-      "AI menganalisis hasil kamu dan memberikan rekomendasi karir, skill gap, dan learning path.",
+    icon: Cpu,
+    title: "Analisis & Roadmap AI",
+    desc: "AI membedah 8 dimensi kekuatan teknis, menghitung kecocokan karir tech, dan menyusun roadmap adaptif.",
+    highlight: "Presisi Karir",
   },
   {
     step: "04",
-    icon: TrendingUp,
-    title: "Mulai Perjalanan",
-    description:
-      "Ikuti learning roadmap, kerjakan projects, dan track progress kamu menuju karir impian.",
+    icon: Rocket,
+    title: "Bangun Portofolio & Naik Kelas",
+    desc: "Selesaikan milestone terarah, bangun proyek berstandar Tech Spec nyata, dan raih kesiapan industri.",
+    highlight: "Siap Kerja",
   },
 ];
 
 export function HowItWorksSection() {
   return (
-    <section
-      id="how-it-works"
-      className="py-20 lg:py-32 bg-muted/30"
-    >
+    <section id="how-it-works" className="py-16 sm:py-24 lg:py-32 bg-muted/30 border-t border-border/70 relative">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold sm:text-4xl lg:text-5xl">
-            Cara Kerja
+        {/* Section Heading */}
+        <div className="text-center max-w-3xl mx-auto mb-14 sm:mb-20">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-background px-3 py-1 text-xs font-medium text-muted-foreground mb-4">
+            <span>Alur Sistem Terintegrasi</span>
+          </div>
+          <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
+            4 Langkah Menuju <span className="gradient-text">Level Berikutnya</span>
           </h2>
-          <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            4 langkah sederhana untuk memulai perjalanan karir development
-            kamu.
+          <p className="mt-4 text-sm sm:text-base text-muted-foreground">
+            Perjalanan terstruktur dari asesmen awal hingga kesiapan portofolio profesional.
           </p>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-          {steps.map((step, index) => (
-            <div key={step.step} className="relative">
-              {/* Connector line */}
-              {index < steps.length - 1 && (
-                <div className="hidden lg:block absolute top-12 left-[60%] w-[80%] h-0.5 bg-gradient-to-r from-border to-transparent" />
-              )}
+        {/* 4 Steps Grid with connecting lines on desktop */}
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 relative">
+          {workflowSteps.map((item, idx) => {
+            const Icon = item.icon;
+            return (
+              <div key={item.step} className="relative group">
+                {/* Horizontal line connector for desktop */}
+                {idx < workflowSteps.length - 1 && (
+                  <div className="hidden lg:block absolute top-9 left-[55%] w-[90%] h-[2px] bg-gradient-to-r from-border via-primary/30 to-border -z-0 pointer-events-none" />
+                )}
 
-              <Card className="relative">
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold">
-                      {step.step}
+                <div className="relative rounded-2xl border border-border/80 bg-card p-6 h-full flex flex-col justify-between group-hover:border-primary/50 transition-all glow-card">
+                  <div>
+                    <div className="flex items-center justify-between mb-5">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground font-mono font-bold text-base shadow-md shadow-primary/20 group-hover:scale-105 transition-transform">
+                        {item.step}
+                      </div>
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                        <Icon className="h-5 w-5 text-indigo-400" />
+                      </div>
                     </div>
-                    <step.icon className="h-6 w-6 text-primary" />
+
+                    <div className="mb-2">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-primary">
+                        {item.highlight}
+                      </span>
+                      <h3 className="text-base sm:text-lg font-bold text-foreground mt-0.5">
+                        {item.title}
+                      </h3>
+                    </div>
+
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                      {item.desc}
+                    </p>
                   </div>
-                  <h3 className="text-lg font-semibold mb-2">{step.title}</h3>
-                  <p className="text-muted-foreground">{step.description}</p>
-                </CardContent>
-              </Card>
-            </div>
-          ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>

@@ -53,6 +53,7 @@ export function useApi<T>({ url, method = "GET", body, enabled = true }: UseApiO
   }, [url, method, body, enabled, session]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
   }, [fetchData]);
 

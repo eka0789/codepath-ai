@@ -1,0 +1,20 @@
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="192" height="192" rx="40" fill="#030712"/>
+  <rect x="2" y="2" width="188" height="188" rx="38" stroke="url(#border_grad)" stroke-width="2"/>
+  <defs>
+    <linearGradient id="border_grad" x1="0" y1="0" x2="192" y2="192" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6366f1"/>
+      <stop offset="0.5" stop-color="#8b5cf6"/>
+      <stop offset="1" stop-color="#ec4899"/>
+    </linearGradient>
+    <linearGradient id="icon_grad" x1="36" y1="36" x2="156" y2="156" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4f46e5"/>
+      <stop offset="1" stop-color="#9333ea"/>
+    </linearGradient>
+  </defs>
+  <rect x="36" y="36" width="120" height="120" rx="28" fill="url(#icon_grad)"/>
+  <!-- Code Icon brackets -->
+  <path d="M78 76L58 96L78 116" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M114 76L134 96L114 116" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M104 68L88 124" stroke="white" stroke-width="9" stroke-linecap="round"/>
+</svg>

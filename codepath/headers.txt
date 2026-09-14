@@ -1,0 +1,12 @@
+HTTP/1.1 302 Found
+Cache-Control: public, max-age=0, must-revalidate
+Content-Length: 0
+Date: Mon, 14 Sep 2026 06:55:28 GMT
+Location: https://codepath-iota.vercel.app
+Server: Vercel
+Set-Cookie: __Secure-authjs.session-token=eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2Q0JDLUhTNTEyIiwia2lkIjoia3ZXRnlXaDBQcUN5eU16SHRxSU1KcC0zMnhFVVRUbUVhcmVRNE53ZXhpZTBGSVZMdVFjLU0wUm1fc2lCZHFmOFVUZXBPNkl3V2l2SDYtY0ZqanM3YncifQ..FcQZLH6gAMfbexdIFrW7DA.p5fbfkCgvOZdYHOlaOMNxZ9WKwSYqMzL905AzA5Ao8deGdUafEsfEyagHPKEbJo_CwN63XLXx4893A0bd5GJJ8qABdhceRwh3nX93PsGE_Vg2BsZJ-gZa-Vce7NOVy_79lEvTj-G575Y7Ux75r0MqLpfne1mKS85Fr77lPe0QhcbV_gD4hShF1qbcsrm09P1bkU_Wu4E-5HZiXEh3y8aq5OlL1WaOT5Wabzv3FInir0Gaob9fobzzAjjncatq3u19nbI3wJKKuKRJlpVj9fe5Chj4XBopNBqGTXttrZPSGs.F6BR4qEgLf4ate8KuJr824YYUl0-Ic-OwHcGi349Wj4; Path=/; Expires=Wed, 14 Oct 2026 06:55:28 GMT; HttpOnly; Secure; SameSite=Lax
+Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+X-Matched-Path: /api/auth/[...nextauth]
+X-Vercel-Cache: MISS
+X-Vercel-Id: sin1::iad1::x5wdz-1789368924755-ab38c87aa814
+
