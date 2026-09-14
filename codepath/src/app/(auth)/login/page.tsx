@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,41 +15,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Eye, EyeOff, Github, Mail } from "lucide-react";
+import { loginWithCredentials } from "./actions";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const router = useRouter();
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError("");
-    setIsLoading(true);
-
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-
-    try {
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
-
-      if (result?.error) {
-        setError("Email atau password salah");
-      } else {
-        router.push("/dashboard");
-        router.refresh();
-      }
-    } catch {
-      setError("Terjadi kesalahan. Silakan coba lagi.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [state, formAction, isPending] = useActionState(loginWithCredentials, undefined);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4">
@@ -103,14 +72,14 @@ export default function LoginPage() {
             </div>
 
             {/* Error Message */}
-            {error && (
+            {state?.error && (
               <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                {error}
+                {state.error}
               </div>
             )}
 
             {/* Email/Password Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form action={formAction} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -152,8 +121,8 @@ export default function LoginPage() {
                   </button>
                 </div>
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Masuk..." : "Masuk"}
+              <Button type="submit" className="w-full" disabled={isPending}>
+                {isPending ? "Masuk..." : "Masuk"}
               </Button>
             </form>
           </CardContent>
