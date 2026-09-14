@@ -1,6 +1,7 @@
 "use server";
 
 import { signIn } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 export async function loginWithCredentials(
   _prevState: { error: string } | undefined,
@@ -13,21 +14,15 @@ export async function loginWithCredentials(
     return { error: "Email dan password harus diisi" };
   }
 
-  try {
-    await signIn("credentials", {
-      email,
-      password,
-      redirectTo: "/dashboard",
-    });
-  } catch (e: unknown) {
-    if (e && typeof e === "object" && "digest" in e) {
-      const digest = (e as { digest: string }).digest;
-      if (digest.includes("NEXT_REDIRECT")) {
-        throw e;
-      }
-    }
+  const result = await signIn("credentials", {
+    email,
+    password,
+    redirect: false,
+  });
+
+  if (result?.error) {
     return { error: "Email atau password salah" };
   }
 
-  return { error: "" };
+  redirect("/dashboard");
 }
