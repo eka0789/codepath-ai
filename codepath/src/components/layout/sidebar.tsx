@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import {
   BarChart3,
   BookOpen,
+  Dna,
   GraduationCap,
   Home,
   LayoutDashboard,
@@ -20,6 +21,7 @@ import {
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/assessment", label: "Assessment", icon: Sparkles },
+  { href: "/dna", label: "Coding DNA", icon: Dna },
   { href: "/career", label: "Career Paths", icon: TrendingUp },
   { href: "/roadmap", label: "Learning Roadmap", icon: Zap },
   { href: "/projects", label: "Projects", icon: BookOpen },
