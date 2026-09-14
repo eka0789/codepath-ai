@@ -1,0 +1,805 @@
+// CodePath AI - Prisma Schema
+// PostgreSQL Database
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========================================
+// Authentication
+// ========================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  passwordHash  String?
+  onboarded     Boolean   @default(false)
+  role          UserRole  @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  accounts      Account[]
+  sessions      Session[]
+  profile       Profile?
+  assessments   Assessment[]
+  codingDNA     CodingDNA?
+  skills        UserSkill[]
+  careerPaths   CareerRecommendation[]
+  roadmap       LearningRoadmap?
+  projects      Project[]
+  conversations AIConversation[]
+  activities    UserActivity[]
+  achievements  Achievement[]
+  settings      UserSettings?
+  verifications Verification[]
+  challengeSubmissions ChallengeSubmission[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ========================================
+// User Profile
+// ========================================
+
+model Profile {
+  id              String  @id @default(cuid())
+  userId          String  @unique
+  bio             String? @db.Text
+  location        String?
+  timezone        String?
+  website         String?
+  github          String?
+  linkedin        String?
+  yearsExperience Int?
+  currentRole     String?
+  company         String?
+  avatar          String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model UserSettings {
+  id                 String      @id @default(cuid())
+  userId             String      @unique
+  theme              Theme       @default(DARK)
+  language           Language    @default(ID)
+  emailNotifications Boolean     @default(true)
+  pushNotifications  Boolean     @default(true)
+  weeklyDigest       Boolean     @default(true)
+  learningHoursPerWeek Int       @default(10)
+  preferredLearningStyle String? @default("visual")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+// ========================================
+// Assessment & Coding DNA
+// ========================================
+
+model Assessment {
+  id          String           @id @default(cuid())
+  userId      String
+  type        AssessmentType
+  status      AssessmentStatus @default(IN_PROGRESS)
+  score       Int?
+  startedAt   DateTime         @default(now())
+  completedAt DateTime?
+  duration    Int?             // seconds
+
+  answers  AssessmentAnswer[]
+  user     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+  @@map("assessments")
+}
+
+model AssessmentAnswer {
+  id             String    @id @default(cuid())
+  assessmentId   String
+  questionId     String
+  answer         String
+  isCorrect      Boolean?
+  timeSpent      Int?      // seconds
+  createdAt      DateTime  @default(now())
+
+  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@index([assessmentId])
+  @@map("assessment_answers")
+}
+
+model CodingDNA {
+  id                    String @id @default(cuid())
+  userId                String @unique
+  problemSolving        Int    @default(0) // 0-100
+  algorithmicThinking   Int    @default(0)
+  systemDesign          Int    @default(0)
+  codeQuality           Int    @default(0)
+  debugging             Int    @default(0)
+  creativity            Int    @default(0)
+  collaboration         Int    @default(0)
+  learningAbility       Int    @default(0)
+  primaryStyle          String?
+  secondaryStyle        String?
+  strengths             String[] // Array of strength areas
+  growthAreas           String[] // Array of growth areas
+  recommendedFocus      String[] // Array of recommended focus areas
+  analyzedAt            DateTime @default(now())
+  version               Int      @default(1)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("coding_dna")
+}
+
+// ========================================
+// Technology & Skills
+// ========================================
+
+model Technology {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  category    TechCategory
+  description String?
+  icon        String?
+  website     String?
+  difficulty  Difficulty @default(INTERMEDIATE)
+  popularity  Float    @default(0)
+  createdAt   DateTime @default(now())
+
+  skills     UserSkill[]
+  projects   ProjectTechStack[]
+  roadmaps   RoadmapNodeResource[]
+  challenges Challenge[]
+
+  @@map("technologies")
+}
+
+model Skill {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  category    SkillCategory
+  description String?
+  parentId    String?
+  parent      Skill?   @relation("SkillHierarchy", fields: [parentId], references: [id])
+  children    Skill[]  @relation("SkillHierarchy")
+  createdAt   DateTime @default(now())
+
+  userSkills UserSkill[]
+
+  @@map("skills")
+}
+
+model UserSkill {
+  id              String      @id @default(cuid())
+  userId          String
+  skillId         String
+  technologyId    String?
+  level           SkillLevel  @default(BEGINNER)
+  score           Int         @default(0) // 0-100
+  selfAssessed    Boolean     @default(false)
+  verified        Boolean     @default(false)
+  verifiedAt      DateTime?
+  evidenceCount   Int         @default(0)
+  lastUsedAt      DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill    Skill      @relation(fields: [skillId], references: [id])
+  technology Technology? @relation(fields: [technologyId], references: [id])
+  evidence SkillEvidence[]
+
+  @@unique([userId, skillId])
+  @@index([userId, level])
+  @@map("user_skills")
+}
+
+model SkillEvidence {
+  id          String       @id @default(cuid())
+  userSkillId String
+  type        EvidenceType
+  title       String
+  description String?      @db.Text
+  url         String?
+  verified    Boolean      @default(false)
+  verifiedAt  DateTime?
+  metadata    Json?        // Additional evidence data
+  createdAt   DateTime     @default(now())
+
+  userSkill UserSkill @relation(fields: [userSkillId], references: [id], onDelete: Cascade)
+
+  @@index([userSkillId])
+  @@map("skill_evidence")
+}
+
+// ========================================
+// Career Paths
+// ========================================
+
+model CareerPath {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?  @db.Text
+  icon        String?
+  avgSalary   String?
+  demand      String?  // high, medium, low
+  growth      String?  // high, medium, low
+  difficulty  Difficulty @default(INTERMEDIATE)
+  tags        String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  recommendations CareerRecommendation[]
+  roadmaps        LearningRoadmap[]
+
+  @@map("career_paths")
+}
+
+model CareerRecommendation {
+  id           String   @id @default(cuid())
+  userId       String
+  careerPathId String
+  matchScore   Int      // 0-100
+  reasoning    String?  @db.Text
+  skillGaps    Json?    // Array of skill gaps
+  suggestedAt  DateTime @default(now())
+  viewed       Boolean  @default(false)
+  selected     Boolean  @default(false)
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  careerPath CareerPath @relation(fields: [careerPathId], references: [id])
+
+  @@index([userId, matchScore(sort: Desc)])
+  @@map("career_recommendations")
+}
+
+// ========================================
+// Learning Roadmap
+// ========================================
+
+model LearningRoadmap {
+  id              String        @id @default(cuid())
+  userId          String        @unique
+  careerPathId    String
+  title           String
+  description     String?       @db.Text
+  estimatedHours  Int?
+  estimatedWeeks  Int?
+  status          RoadmapStatus @default(ACTIVE)
+  progress        Float         @default(0) // 0-100
+  startedAt       DateTime      @default(now())
+  completedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  careerPath CareerPath @relation(fields: [careerPathId], references: [id])
+  nodes      RoadmapNode[]
+
+  @@index([userId, status])
+  @@map("learning_roadmaps")
+}
+
+model RoadmapNode {
+  id              String       @id @default(cuid())
+  roadmapId       String
+  parentId        String?
+  parent          RoadmapNode? @relation("NodeHierarchy", fields: [parentId], references: [id])
+  children        RoadmapNode[] @relation("NodeHierarchy")
+  title           String
+  description     String?      @db.Text
+  type            NodeType
+  difficulty      Difficulty   @default(INTERMEDIATE)
+  estimatedHours  Int?
+  order           Int
+  status          NodeStatus   @default(NOT_STARTED)
+  completedAt     DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  roadmap   LearningRoadmap     @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  resources RoadmapNodeResource[]
+  tasks     RoadmapTask[]
+
+  @@index([roadmapId, order])
+  @@map("roadmap_nodes")
+}
+
+model RoadmapNodeResource {
+  id          String    @id @default(cuid())
+  nodeId      String
+  technologyId String?
+  title       String
+  url         String?
+  type        ResourceType
+  description String?
+  order       Int       @default(0)
+
+  node       RoadmapNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  technology Technology? @relation(fields: [technologyId], references: [id])
+
+  @@map("roadmap_node_resources")
+}
+
+model RoadmapTask {
+  id          String    @id @default(cuid())
+  nodeId      String
+  title       String
+  description String?   @db.Text
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+  order       Int       @default(0)
+
+  node RoadmapNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@map("roadmap_tasks")
+}
+
+// ========================================
+// Projects
+// ========================================
+
+model Project {
+  id          String        @id @default(cuid())
+  userId      String
+  title       String
+  description String?       @db.Text
+  difficulty  Difficulty    @default(INTERMEDIATE)
+  status      ProjectStatus @default(IDEA)
+  category    String?
+  tags        String[]
+  repoUrl     String?
+  deployUrl   String?
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  prd           PRD?
+  techSpec      TechnicalSpecification?
+  tasks         Task[]
+  techStack     ProjectTechStack[]
+  verifications Verification[]
+
+  @@index([userId, status])
+  @@map("projects")
+}
+
+model ProjectTechStack {
+  id           String @id @default(cuid())
+  projectId    String
+  technologyId String
+
+  project    Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  technology Technology @relation(fields: [technologyId], references: [id])
+
+  @@unique([projectId, technologyId])
+  @@map("project_tech_stack")
+}
+
+model PRD {
+  id              String   @id @default(cuid())
+  projectId       String   @unique
+  title           String
+  overview        String?  @db.Text
+  userStories     Json?    // Array of user stories
+  requirements    Json?    // Array of requirements
+  successMetrics  Json?    // Array of success metrics
+  constraints     Json?    // Array of constraints
+  version         Int      @default(1)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("prds")
+}
+
+model TechnicalSpecification {
+  id            String   @id @default(cuid())
+  projectId     String   @unique
+  architecture  String?  @db.Text
+  dataModel     Json?    // Data model definition
+  apiDesign     Json?    // API endpoints
+  techStack     Json?    // Selected technologies
+  implementation Json?   // Implementation plan
+  version       Int      @default(1)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("technical_specifications")
+}
+
+model Task {
+  id          String     @id @default(cuid())
+  projectId   String
+  parentId    String?
+  parent      Task?      @relation("TaskHierarchy", fields: [parentId], references: [id])
+  children    Task[]     @relation("TaskHierarchy")
+  title       String
+  description String?    @db.Text
+  status      TaskStatus @default(TODO)
+  priority    Priority   @default(MEDIUM)
+  order       Int        @default(0)
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  project  Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  subtasks SubTask[]
+
+  @@index([projectId, status])
+  @@map("tasks")
+}
+
+model SubTask {
+  id          String     @id @default(cuid())
+  taskId      String
+  title       String
+  completed   Boolean    @default(false)
+  completedAt DateTime?
+  order       Int        @default(0)
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@map("subtasks")
+}
+
+// ========================================
+// Verification
+// ========================================
+
+model Verification {
+  id          String           @id @default(cuid())
+  projectId   String
+  userId      String
+  status      VerificationStatus @default(PENDING)
+  score       Int?             // 0-100
+  feedback    String?          @db.Text
+  suggestions Json?            // Array of suggestions
+  verifiedAt  DateTime?
+  createdAt   DateTime         @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, status])
+  @@map("verifications")
+}
+
+// ========================================
+// Challenges
+// ========================================
+
+model Challenge {
+  id          String     @id @default(cuid())
+  title       String
+  slug        String     @unique
+  description String?    @db.Text
+  difficulty  Difficulty @default(INTERMEDIATE)
+  category    String?
+  timeLimit   Int?       // minutes
+  maxScore    Int        @default(100)
+  tags        String[]
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime   @default(now())
+
+  technology   Technology?         @relation(fields: [technologyId], references: [id])
+  technologyId String?
+  submissions  ChallengeSubmission[]
+
+  @@map("challenges")
+}
+
+model ChallengeSubmission {
+  id          String     @id @default(cuid())
+  challengeId String
+  userId      String
+  code        String?    @db.Text
+  language    String?
+  score       Int?
+  feedback    String?    @db.Text
+  passed      Boolean    @default(false)
+  submittedAt DateTime   @default(now())
+
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([challengeId, userId])
+  @@map("challenge_submissions")
+}
+
+// ========================================
+// AI Conversations
+// ========================================
+
+model AIConversation {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String?
+  context   Json?    // Conversation context
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages AIMessage[]
+
+  @@index([userId, updatedAt(sort: Desc)])
+  @@map("ai_conversations")
+}
+
+model AIMessage {
+  id             String      @id @default(cuid())
+  conversationId String
+  role           MessageRole
+  content        String      @db.Text
+  tokenCount     Int?
+  createdAt      DateTime    @default(now())
+
+  conversation AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@map("ai_messages")
+}
+
+// ========================================
+// Gamification
+// ========================================
+
+model Achievement {
+  id          String    @id @default(cuid())
+  userId      String
+  type        AchievementType
+  title       String
+  description String?
+  icon        String?
+  xp          Int       @default(0)
+  unlockedAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type])
+  @@map("achievements")
+}
+
+model UserActivity {
+  id        String      @id @default(cuid())
+  userId    String
+  type      ActivityType
+  action    String
+  metadata  Json?
+  xp        Int         @default(0)
+  createdAt DateTime    @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("user_activities")
+}
+
+// ========================================
+// Enums
+// ========================================
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum Theme {
+  DARK
+  LIGHT
+  SYSTEM
+}
+
+enum Language {
+  ID // Indonesian
+  EN // English
+}
+
+enum AssessmentType {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  COMPREHENSIVE
+}
+
+enum AssessmentStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}
+
+enum TechCategory {
+  PROGRAMMING_LANGUAGE
+  FRONTEND
+  BACKEND
+  DATABASE
+  DEVOPS
+  MOBILE
+  AI_ML
+  CLOUD
+  TOOL
+  OTHER
+}
+
+enum Difficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum SkillCategory {
+  TECHNICAL
+  SOFT_SKILL
+  DOMAIN
+  TOOL
+}
+
+enum SkillLevel {
+  BEGINNER
+  ELEMENTARY
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum EvidenceType {
+  PROJECT
+  CHALLENGE
+  COURSE
+  CERTIFICATION
+  CONTRIBUTION
+  OTHER
+}
+
+enum RoadmapStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ABANDONED
+}
+
+enum NodeType {
+  CONCEPT
+  TUTORIAL
+  PRACTICE
+  PROJECT
+  CHALLENGE
+  MILESTONE
+}
+
+enum NodeStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+}
+
+enum ResourceType {
+  DOCUMENTATION
+  VIDEO
+  COURSE
+  ARTICLE
+  EXERCISE
+  OTHER
+}
+
+enum ProjectStatus {
+  IDEA
+  PLANNING
+  IN_PROGRESS
+  COMPLETED
+  ON_HOLD
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  REVIEW
+  DONE
+  BLOCKED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum VerificationStatus {
+  PENDING
+  PASSED
+  FAILED
+  NEEDS_REVISION
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum AchievementType {
+  FIRST_ASSESSMENT
+  FIRST_PROJECT
+  SKILL_MASTER
+  STREAK_7_DAYS
+  STREAK_30_DAYS
+  ROADMAP_COMPLETE
+  CHALLENGE_WINNER
+  MENTOR
+  EARLY_ADOPTER
+}
+
+enum ActivityType {
+  ASSESSMENT
+  LEARNING
+  PROJECT
+  CHALLENGE
+  MENTOR
+  OTHER
+}
