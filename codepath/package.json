@@ -12,7 +12,7 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
     "postinstall": "prisma generate",
-    "vercel-build": "npm ci && next build"
+    "vercel-build": "next build"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.0",
